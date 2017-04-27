@@ -295,7 +295,7 @@ func (cmd *ovfx) Import(fpath string) (*types.ManagedObjectReference, error) {
 
 	// Build slice of items and URLs first, so that the lease updater can know
 	// about every item that needs to be uploaded, and thereby infer progress.
-	var items []ovfFileItem
+	var items []OvfFileItem
 
 	for _, device := range info.DeviceUrl {
 		for _, item := range spec.FileItem {
@@ -308,17 +308,17 @@ func (cmd *ovfx) Import(fpath string) (*types.ManagedObjectReference, error) {
 				return nil, err
 			}
 
-			i := ovfFileItem{
-				url:  u,
-				item: item,
-				ch:   make(chan progress.Report),
+			i := OvfFileItem{
+				Url:  u,
+				Item: item,
+				Ch:   make(chan progress.Report),
 			}
 
 			items = append(items, i)
 		}
 	}
 
-	u := newLeaseUpdater(cmd.Client, lease, items)
+	u := NewLeaseUpdater(cmd.Client, lease, items)
 	defer u.Done()
 
 	for _, i := range items {
@@ -331,8 +331,8 @@ func (cmd *ovfx) Import(fpath string) (*types.ManagedObjectReference, error) {
 	return &info.Entity, lease.HttpNfcLeaseComplete(ctx)
 }
 
-func (cmd *ovfx) Upload(lease *object.HttpNfcLease, ofi ovfFileItem) error {
-	item := ofi.item
+func (cmd *ovfx) Upload(lease *object.HttpNfcLease, ofi OvfFileItem) error {
+	item := ofi.Item
 	file := item.Path
 
 	f, size, err := cmd.Open(file)
@@ -361,7 +361,7 @@ func (cmd *ovfx) Upload(lease *object.HttpNfcLease, ofi ovfFileItem) error {
 		opts.Type = "application/x-vnd.vmware-streamVmdk"
 	}
 
-	return cmd.Client.Client.Upload(f, ofi.url, &opts)
+	return cmd.Client.Client.Upload(f, ofi.Url, &opts)
 }
 
 func (cmd *ovfx) PowerOn(vm *object.VirtualMachine) error {

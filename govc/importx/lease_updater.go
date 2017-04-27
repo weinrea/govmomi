@@ -30,14 +30,14 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 )
 
-type ovfFileItem struct {
-	url  *url.URL
-	item types.OvfFileItem
-	ch   chan progress.Report
+type OvfFileItem struct {
+	Url  *url.URL
+	Item types.OvfFileItem
+	Ch   chan progress.Report
 }
 
-func (o ovfFileItem) Sink() chan<- progress.Report {
-	return o.ch
+func (o OvfFileItem) Sink() chan<- progress.Report {
+	return o.Ch
 }
 
 type leaseUpdater struct {
@@ -52,7 +52,7 @@ type leaseUpdater struct {
 	wg sync.WaitGroup // Track when update loop is done
 }
 
-func newLeaseUpdater(client *vim25.Client, lease *object.HttpNfcLease, items []ovfFileItem) *leaseUpdater {
+func NewLeaseUpdater(client *vim25.Client, lease *object.HttpNfcLease, items []OvfFileItem) *leaseUpdater {
 	l := leaseUpdater{
 		client: client,
 		lease:  lease,
@@ -61,7 +61,7 @@ func newLeaseUpdater(client *vim25.Client, lease *object.HttpNfcLease, items []o
 	}
 
 	for _, item := range items {
-		l.total += item.item.Size
+		l.total += item.Item.Size
 		go l.waitForProgress(item)
 	}
 
@@ -72,16 +72,16 @@ func newLeaseUpdater(client *vim25.Client, lease *object.HttpNfcLease, items []o
 	return &l
 }
 
-func (l *leaseUpdater) waitForProgress(item ovfFileItem) {
+func (l *leaseUpdater) waitForProgress(item OvfFileItem) {
 	var pos, total int64
 
-	total = item.item.Size
+	total = item.Item.Size
 
 	for {
 		select {
 		case <-l.done:
 			return
-		case p, ok := <-item.ch:
+		case p, ok := <-item.Ch:
 			// Return in case of error
 			if ok && p.Error() != nil {
 				return

@@ -757,3 +757,15 @@ func (v VirtualMachine) UpgradeTools(ctx context.Context, options string) (*Task
 
 	return NewTask(v.c, res.Returnval), nil
 }
+
+func (v VirtualMachine) ExportVm(ctx context.Context) (*HttpNfcLease, error) {
+	req := types.ExportVm{
+		This: v.Reference(),
+	}
+	res, err := methods.ExportVm(ctx, v.Client(), &req)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewHttpNfcLease(v.c, res.Returnval), nil
+}
